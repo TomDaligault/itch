@@ -12,13 +12,15 @@ class StateAwareScale(tk.Scale):
 								   sliderlength=5)
 
 	def configure(self, **kwargs):
+
 		if 'bg' in kwargs or 'background' in kwargs:
 		    self.enabled_color = kwargs.get('bg', kwargs.get('background'))
+
 		if 'state' in kwargs:
 			state = kwargs['state']
 			if state == 'disabled':
 				super().configure(bg='SystemDisabledText')
 			else:
 				super().configure(bg=self.enabled_color)
-
+				
 		super().configure(**kwargs)

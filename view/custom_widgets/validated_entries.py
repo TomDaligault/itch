@@ -1,41 +1,46 @@
 import tkinter as tk
-from tkinter import ttk
 import re
 
-#DigitEntry turns text red on focus-out if the text contains anything other positive whole numbers
-class DigitEntry(tk.Entry):
-	def __init__(self, parent, **kwargs):
-		super().__init__(parent, width=12, **kwargs)
-		validation_function = self.register(self._validate_digit)
-		self.configure(validate='focusout', validatecommand = (validation_function, '%P'))
+class ValidatedEntry(tk.Entry):
+	def __init__(self, parent, validation_pattern, **kwargs):
+		super().__init__(parent, **kwargs)
+		self.validation_pattern = validation_pattern
+		validation_function = self.register(self._validate_pattern)
+		self.configure(validate='all', validatecommand = (validation_function, '%P'))
 
-	def _validate_digit(self, value):
-		pattern = r'^[1-9]\d*$'
-		if re.fullmatch(pattern, value) is None: #if no match
-			self.configure(foreground ='red')
-			return False
-		else:
-			self.configure(foreground ='black')
+		self.valid_color = 'black'
+		self.invalid_color = 'red'
+
+		if 'fg' in kwargs or 'foreground' in kwargs:
+			self.valid_color = kwargs.get('fg', kwargs.get('foreground'))
+
+	def _validate_pattern(self, value):
+		if re.fullmatch(self.validation_pattern, value) is None: #if no match
+			super().configure(foreground = self.invalid_color)
 			return True
+		else:
+			super().configure(foreground = self.valid_color)
+			return True
+
+	def configure(self, **kwargs):
+		super().configure(**kwargs)
+		if 'fg' in kwargs or 'foreground' in kwargs:
+			self.valid_color = kwargs.get('fg', kwargs.get('foreground'))
+			super().configure(fg=self.valid_color)
+
+
+#DigitEntry turns text red on focus-out if the text contains anything other positive whole numbers
+class DigitEntry(ValidatedEntry):
+	def __init__(self, parent, **kwargs):
+		super().__init__(parent, validation_pattern=r'^[1-9]\d*$', width=12, **kwargs)
 
 	def get(self):
 		return int(super().get())
 
 #FloatEntry turns text red on focus-out if the text contains anything other than a float
-class FloatEntry(tk.Entry):
+class FloatEntry(ValidatedEntry):
 	def __init__(self, parent, **kwargs):
-		super().__init__(parent, width=12, **kwargs)
-		validation_function = self.register(self._validate_float)
-		self.configure(validate='focusout', validatecommand = (validation_function, '%P'))
-
-	def _validate_float(self, value):
-		pattern = r'^-?\d+(\.\d+)?$'
-		if re.fullmatch(pattern, value) is None: #if no match
-			self.configure(foreground ='red')
-			return False
-		else:
-			self.configure(foreground ='black')
-			return True
+		super().__init__(parent, validation_pattern=r'^-?\d+(\.\d+)?$', width=12, **kwargs)
 
 	def get(self):
 		return float(super().get())

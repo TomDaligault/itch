@@ -8,12 +8,10 @@ import matplotlib.animation as animation
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 class TransversePlotsWidget(tk.Frame):
-	color_palette = {'dark': '#282828', 'mid': '#526D82', 'light': '#06FF00', 'white': '#FFFFFF'}
 
-	line_kwargs = {'linewidth': 0.5, 'markerfacecolor': color_palette['light'],
-	'markeredgecolor': color_palette['light'], 'color': color_palette['mid']}
+	line_kwargs = {'linewidth': 0.5}
 
-	scatter_kwargs = {'color':'None', 'edgecolors': color_palette['mid'], 's': 50}
+	scatter_kwargs = {'color':'None', 's': 50}
 	previous_lines = []
 
 	def __init__(self, parent, *args, **kwargs):
@@ -43,27 +41,42 @@ class TransversePlotsWidget(tk.Frame):
 		self.phase_space_scatter = self.phase_space_plot.scatter([],[], animated = True, **self.scatter_kwargs)
 
 		self._set_default_plot_limits()
-		self._apply_color_palette()
 
 		self.figure.tight_layout(pad=1.6)
 
-	def _apply_color_palette(self):
-		dark = self.color_palette['dark']
-		mid = self.color_palette['mid']
-		light = self.color_palette['light']
-		white = self.color_palette['white']
+	def configure(self, **kwargs):
+		if 'bg' in kwargs or 'background' in kwargs:
+			bg_color = kwargs.pop('bg', kwargs.pop('background', None))
+			self.figure.set_facecolor(bg_color)
+			for plot in self.figure.get_axes():
+				plot.set_facecolor(bg_color)
 
-		self.figure.set_facecolor(dark)
+		if 'fg' in kwargs or 'foreground' in kwargs:
+			fg_color = kwargs.pop('fg', kwargs.pop('foreground', None))
+			self.orbit_scatter.set_edgecolors(fg_color)
+			self.phase_space_scatter.set_edgecolors(fg_color)
+			self.orbit_line.set_color(fg_color)
+			self.phase_space_line.set_color(fg_color)
+			self.line_kwargs['color'] = fg_color
+			for plot in self.figure.get_axes():
+				plot.title.set_color(fg_color)
+				plot.xaxis.label.set_color(fg_color)
+				plot.yaxis.label.set_color(fg_color)
+				plot.tick_params(colors=fg_color)
 
-		for plot in self.figure.get_axes():
-			plot.set_facecolor(dark)
-			plot.title.set_color(mid)
-			plot.xaxis.label.set_color(mid)
-			plot.yaxis.label.set_color(mid)
-			plot.tick_params(colors=mid)
+				for spine in plot.spines.values():
+					spine.set_color(fg_color)
 
-			for spine in plot.spines.values():
-				spine.set_color(mid)
+		if 'marker_color' in kwargs:
+			marker_color = kwargs.pop('marker_color', None)
+			self.line_kwargs['markerfacecolor'] = marker_color
+			self.line_kwargs['markeredgecolor'] = marker_color
+			self.orbit_line.set_markerfacecolor(marker_color)
+			self.orbit_line.set_markeredgecolor(marker_color)
+			self.phase_space_line.set_markerfacecolor(marker_color)
+			self.phase_space_line.set_markeredgecolor(marker_color)
+
+		super().configure(**kwargs)
 
 
 	def relimit_orbit_plot(self, smin, smax, xmin, xmax):

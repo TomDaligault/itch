@@ -7,9 +7,11 @@ class RecursiveKeyWordSetter:
 	def __init__(self):
 		self.class_config_map = {}
 
-	def set_widget_config(self, widget_class, **kwargs):
+	def set_config(self, widget_class, **kwargs):
 		self.class_config_map[widget_class] = kwargs
 
+	def clear_configs(self):
+		self.class_config_map = {}
 
 	def apply_configs(self, widget):
 		for widget_class, kwargs_dict in self.class_config_map.items():
@@ -17,12 +19,32 @@ class RecursiveKeyWordSetter:
 				try:
 					widget.configure(**kwargs_dict)
 				except tk.TclError as e:
-				    print(f"Skipping widget {widget} due to invalid config: {e}")
+					print(f"Skipping widget {widget} due to invalid config: {e}")
 
 		child_widgets = widget.winfo_children()
 		for child in child_widgets:
 			self.apply_configs(child)
 
+class RecursiveBindSetter:
+	def __init__(self):
+		self.class_bind_map = {}
+
+	def set_bind(self, widget_class, event, func):
+		if widget_class not in self.class_bind_map:
+			self.class_bind_map[widget_class] = {}
+		self.class_bind_map[widget_class][event] = func
+
+	def clear_binds(self):
+		self.class_bind_map = {}
+
+	def apply_binds(self, widget):
+		for widget_class, bind_dict in self.class_bind_map.items():
+			if isinstance(widget, widget_class):
+				for event, func in bind_dict.items():
+					widget.bind(event, lambda e, f=func: f(e.widget), add='+')
+
+		for child in widget.winfo_children():
+			self.apply_binds(child)
 
 if __name__ == '__main__':
 	root = tk.Tk()

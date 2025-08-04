@@ -8,7 +8,7 @@ class Model:
 		return Particle(x, xp, s)
 
 	def make_lattice(drift_length, focal_length, num_cells, quad_divisions = 5, drift_divisions = 5):
-		return Lattice(drift_length, focal_length, num_cells, quad_divisions = 5, drift_divisions = 5)
+		return Lattice(drift_length, focal_length, num_cells, quad_divisions, drift_divisions)
 
 	def propagate(self, particle, lattice):
 		for _ in range(lattice.num_cells):

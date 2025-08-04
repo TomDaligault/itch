@@ -25,12 +25,6 @@ class CellElementSelector(BaseFrame):
 	def set_scale_length(self, scale_length):
 		self.cell_scale.configure(to=scale_length)
 
-	def set_colors(self, background, enabled, disabled, trough, quads):
-		self.cell_scale.set_colors(enabled, disabled, trough)
-		self.cell_scale.configure(bg=enabled)
-		self.cell_diagram.set_colors(quads, background)
-
-
 #CellDiagram is a canvas object using rectangles and ovals to make a rough FODO cell diagram
 class CellDiagram(tk.Canvas):
 	def __init__(self, parent, width=200, height=100, **kwargs):
@@ -45,14 +39,12 @@ class CellDiagram(tk.Canvas):
 
 		#draw the defocusing quad
 		self.d_quad = self.create_rectangle(2 + width/2, 4, 3*width/4, height-2, fill='#526D82', width=0)
-		self.bg1 = self.create_oval(2 + width/2 - x_offset, -y_offset/2, 3*width/4 - x_offset+1, height + y_offset/2 + 2, fill='#303030', width=0)
-		self.bg2 = self.create_oval(2 + width/2 + x_offset, -y_offset/2, 3*width/4 + x_offset+1, height + y_offset/2 + 2, fill='#303030', width=0)
+		self.bg1 = self.create_oval(2 + width/2 - x_offset, -y_offset/2, 3*width/4 - x_offset+1, height + y_offset/2 + 2, fill='white', width=0)
+		self.bg2 = self.create_oval(2 + width/2 + x_offset, -y_offset/2, 3*width/4 + x_offset+1, height + y_offset/2 + 2, fill='white', width=0)
 		self.create_rectangle(2 + width/2, 2, 3*width/4 + 2, height-1, outline='#050505')
 
-	def set_colors(self, quads, background):
-		self.configure(bg=background)
-		self.itemconfigure(self.f_quad, fill=quads)
-		self.itemconfigure(self.d_quad, fill=quads)
-
-		self.itemconfigure(self.bg1, fill=background)
-		self.itemconfigure(self.bg2, fill=background)
+	def configure(self, **kwargs):
+		super().configure(**kwargs)
+		if 'bg' in kwargs or 'background' in kwargs:
+			self.itemconfigure(self.bg1, fill = kwargs.get('bg', kwargs.get('background')))
+			self.itemconfigure(self.bg2, fill = kwargs.get('bg', kwargs.get('background')))
