@@ -8,16 +8,6 @@ from view.theme_applier import RecursiveKeyWordSetter, RecursiveBindSetter
 
 if __name__ == '__main__':	
 	root = tk.Tk()
-	# root.overrideredirect(True)
-	# title_bar = tk.Frame(root, bg="darkblue", relief="raised", bd=0)
-	# title_bar.pack(side='top', expand=1, fill="x")
-	# button = tk.Button(title_bar, text='button')
-	# button.pack()
-	# drag_offset = {'x': 0, 'y': 0}
-	# title_bar.bind("<Button-1>", lambda e: (drag_offset.update({'x': e.x_root - root.winfo_x(),'y': e.y_root - root.winfo_y()})))
-	# title_bar.bind("<B1-Motion>", lambda e: root.geometry(f"+{e.x_root - drag_offset['x']}+{e.y_root - drag_offset['y']}"))
-
-
 	root.title('Single Particle Dynamics')
 	view = SingleParticleView(root)
 	model = Model()
@@ -25,11 +15,11 @@ if __name__ == '__main__':
 
 	dark = '#282828'
 	mid = '#303030'
-	text = '#5f8cad' #66AD5F
+	text = '#5f8cad'
 
-	highlight = '#06FF00'
+	highlight = '#0FF600'
 	theme_setter = RecursiveKeyWordSetter()
-	theme_setter.set_config(tk.Scale, bg=highlight, troughcolor=mid, highlightthickness=1, highlightbackground='#526D82')
+	theme_setter.set_config(tk.Scale, bg=highlight, troughcolor=mid, highlightthickness=1, activebackground=highlight, highlightbackground='#526D82')
 	theme_setter.set_config(tk.OptionMenu, bg=mid, fg=text, activeforeground=text, activebackground='#404040')
 	theme_setter.set_config(tk.Button, bg=mid, fg=text, activeforeground=text, activebackground='#404040')
 	theme_setter.set_config(tk.Menu, bg=mid, fg=text, activeforeground=text, activebackground='#404040')
@@ -37,7 +27,7 @@ if __name__ == '__main__':
 	theme_setter.set_config(tk.Label, bg=mid, fg=text)
 	theme_setter.set_config(tk.Canvas, bg=mid)
 	theme_setter.set_config(tk.Frame, bg=mid)
-	theme_setter.set_config(TransversePlotsWidget, bg=mid, fg='#526D82', marker_color=highlight)
+	theme_setter.set_config(TransversePlotsWidget, bg='#282828', fg='#526D82', marker_color=highlight)
 	theme_setter.apply_configs(root)
 
 	bind_setter = RecursiveBindSetter()

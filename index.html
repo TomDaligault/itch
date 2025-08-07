@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html>
+
+<style>
+body {background-color: #1a1a1a; color: #b9b9b9; padding-left: 15%; padding-right: 15%}
+h1 {text-align: center;}
+h2 {text-align: center;}
+h3 {text-align: center; padding-top: 50px}
+p {font-size: 20px;}
+
+details {background-color: #212121; border: 1px solid #aaa; border-radius: 4px; padding: 0.5em 0.5em 0;}
+
+summary {font-weight: bold;margin: -0.5em -0.5em 0; padding: 0.5em;}
+
+details[open] {padding: 0.5em;}
+
+details[open] summary {border-bottom: 1px solid #aaa; margin-bottom: 0.5em;}
+
+.hr_with_particle {position: relative; width: 100%;}
+
+.hr_with_particle hr {border: none; border-top: 2px solid #b9b9b9; margin-right: 10px;}
+
+.hr_with_particle .particle {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translate(50%, -50%);
+  width: 6px;
+  height: 6px;
+  background-color: #b9b9b9;
+  border-radius: 50%;}
+</style>
+
+
+<script>
+function particle_hr(canvasID, containerID) {
+  const container = document.getElementById(containerID);
+  const canvas = document.getElementById(canvasID);
+  const ctx = canvas.getContext('2d');
+
+  // Match canvas size to container
+  const { width, height } = container.getBoundingClientRect();
+  canvas.width = width;
+  canvas.height = height;
+
+  // Animation parameters
+  const speed = 1.2;
+  const trailLength = 200;
+  const trailOffset = 10;
+  const dotRadius = 5;
+  const yCenter = height / 2;
+
+  let x = 0;
+
+  function animate() {
+    ctx.clearRect(0, 0, width, height);
+
+    // Trail gradient
+    const grad = ctx.createLinearGradient(x, 0, x - trailLength, 0);
+    grad.addColorStop(0, "rgba(48, 48, 48, 1)");
+    grad.addColorStop(1, "rgba(48, 48, 48, 0)");
+
+    // Draw trail
+    ctx.beginPath();
+    ctx.moveTo(x - trailLength, yCenter);
+    ctx.lineTo(x - trailOffset, yCenter);
+    ctx.strokeStyle = grad;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Draw dot
+    ctx.beginPath();
+    ctx.arc(x, yCenter, dotRadius, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Update position
+    x += speed;
+    if (x > width + trailLength) x = 0;
+
+    requestAnimationFrame(animate);
+  }
+
+  animate();
+}
+</script>
+
+<script>
+// Multiply 2×2 matrix by 2D vector
+function MVP(matrix, vector) {
+  return [
+    matrix[0][0] * vector[0] + matrix[0][1] * vector[1],
+    matrix[1][0] * vector[0] + matrix[1][1] * vector[1]
+  ];
+}
+
+// Create a particle vector [x, x']
+function make_particle(x, xp) {
+  return [x, xp];
+}
+
+// Create a drift space transfer matrix for length L
+function make_drift_matrix(L) {
+  return [
+    [1, L],
+    [0, 1]
+  ];
+}
+
+// Create a focusing quadrupole matrix with focal length f
+function make_quad_matrix(f) {
+  return [
+    [1, 0],
+    [1 / f, 1]
+  ];
+}
+</script>
+
+
+<script>
+function phase_space_animation(canvasID, containerID) {
+const container = document.getElementById(containerID);
+const {width, height} = container.getBoundingClientRect();
+
+const canvas = document.getElementById(canvasID);
+canvas.width = width;
+canvas.height = height; //scale canvas to fit the container
+
+const ctx = canvas.getContext('2d');
+
+let num_cells = 6
+let element_divisions = 10
+let particle = make_particle(1,-0.1)
+let drift_matrix = make_drift_matrix(10/element_divisions)
+let fquad_matrix = make_quad_matrix(-10*element_divisions)
+let dquad_matrix = make_quad_matrix(10*element_divisions)
+
+let orbit = [particle]
+
+for (cell=1; cell<=num_cells;cell++) {
+  for(i=1; i<=element_divisions; i++) {
+  particle = MVP(fquad_matrix, particle)
+  orbit.push(particle)
+}
+  for(i=1; i<=element_divisions; i++) {
+    particle = MVP(drift_matrix, particle)
+    orbit.push(particle)
+  }
+
+  for(i=1; i<=element_divisions; i++) {
+    particle = MVP(dquad_matrix, particle)
+    orbit.push(particle)
+  }
+  for(i=1; i<=element_divisions; i++) {
+    particle = MVP(drift_matrix, particle)
+    orbit.push(particle)
+  }
+}
+  const scale = canvas.height/6;
+  const radius = 5;
+
+  // Move origin to bottom-left and flip y-axis
+  ctx.translate(0, canvas.height);
+  ctx.scale(1, -1);
+  ctx.lineWidth = 2;
+
+let windowStart = 0;
+const windowSize = 15;
+
+function drawWindow() {
+  //clear the canvas
+  ctx.clearRect(0, 0, canvas.width, canvas.height); 
+
+  //iterate through the window size (-1)
+  for (let i = 0; i < windowSize - 1; i++) {
+    //Grab i and i+1, offset by windowStart, modulo the length of the data
+    const index1 = (windowStart + i) % orbit.length;
+    const index2 = (windowStart + i + 1) % orbit.length; 
+
+    //grab adjacent points
+    const [x1, y1] = orbit[index1];
+    const [x2, y2] = orbit[index2]; 
+
+    //translate the point (0,0) to the center of the canvas, scale data up to fit the canvas well
+    const px1 = x1 * scale + canvas.width / 2;
+    const px2 = x2 * scale + canvas.width / 2;
+    const py1 = y1 * scale * 10 + canvas.height / 2;
+    const py2 = y2 * scale * 10 + canvas.height / 2;
+
+    //draw a line segment to the next point
+    ctx.beginPath();
+    ctx.moveTo(px1, py1);
+    ctx.lineTo(px2, py2);
+
+
+    //set alpha based on how far we are through the window.
+    let alpha = (i + 1) / (windowSize);
+    if (i > windowSize*0.5) alpha = 1 - (i + 1) / windowSize;
+    ctx.strokeStyle = `rgba(185, 185, 185, ${alpha})`;
+    ctx.stroke();
+}
+
+  windowStart = (windowStart + 1) % orbit.length;
+  requestAnimationFrame(drawWindow);
+}
+drawWindow();
+}
+</script>
+
+<head>
+	<title>Single particle dynamics GUI</title>
+</head>
+
+<body>
+	<h1 style="padding-top: 30px;"><span>Single particle dynamics GUI</span></h1>
+
+
+<div id="hr1_container" style="width: 100%; height: 50px;">
+  <canvas id="hr1_canvas" style="width: 100%; height: 100%; display: block;"></canvas>
+  <script>particle_hr('hr1_canvas', "hr1_container" )</script>
+</div>
+
+<h2>Background</h2>
+<p>This article is intended to provide a series of self-guided exercises for the Single Particle Dynamics GUI. The GUI is built to visualize the propagation of single particles through FODO lattices. It generates animations for a particle's orbit through a lattice, as well as its evolution in phase space. Users are given control over the particle's initial conditions, the focal length of the quadrupoles, the drift length between quadrupoles, and the total number of cells. 
+</p>
+
+<p><br>
+You are encouraged to explore how each parameter affects the single particle dynamics. To facilitate this, there are several exercises built around the GUI. Instructions for each exercise are provided below with guiding questions and answers. Use the different tab buttons on the GUI to configure the controls for each exercise appropriately. The exercises are written for anyone who has a basic familarity with linear beam optics, transfer matrices, and phase spaces. They emphasis qualitative observations, but many ideas introduced here can be connected to more advanced concepts. 
+</p>
+
+<p><br>
+Underneath the hood, the GUI uses transfer matrices to propagate a particle through each element of a FODO lattice - starting at the entrance of a focusing quad and using the thin-lens approximation. Note that the animation alots equal time for each lattice element, meaning the particle will appear to take the same amount of time to pass through the drift spaces as it does to pass through the quadrupoles. A real-world observer would instead see particles instantaneous pass through thin quadrupoles. This is done to emphasis the effect of each element in phase space, but results in the orbit plot appearing to pause at each quadrupole. 
+</p>
+
+
+
+<div id="hr2_container" style="width: 100%; height: 50px;">
+  <canvas id="hr2_canvas" style="width: 100%; height: 100%; display: block;"></canvas>
+  <script>setTimeout(() => {particle_hr('hr2_canvas', "hr2_container")}, 8000)</script>
+</div>
+
+<h3>Exercise 1: Single Cell Behavior</h3>
+<p>In this exercise, you are provided with a pre-defined FODO cell and given control over initial conditions of a particle traveling through that cell. The goal is to simply get a feel for the motion of particles in a FODO lattice. 
+</p>
+
+<p>Set the particle's initial conditions using the input boxes for <i>x</i> and <i>x'</i>, then use the <i>run</i> button to see how that particle moves through the cell. Run the animation a few more times using different initial conditions. The plots will naturally retain the history of previous runs to help you compare different scenarios, but you can clear the plots at any time using the <i>clear</i> button.
+</p>
+
+<details>
+  <summary>Qualitatively, what can you say about the motion of particles in phase space?</summary>
+  <p>The particle undergoes some piece-wise, linear motion in phase space. On the phase space plot, horizontal lines correspond to motion through the drift spaces while vertical lines correspond to motion through the quadrupoles. 
+  </p>
+</details>
+
+<details>
+  <summary>Looking at the orbit plot, can you find the <i>s</i> location of the defocusing quadrupole? </summary> 
+	<p><i>s=10</i>. The defocusing quad pushes particles away from its magnetic center in the <i>x</i> plane.
+	</p>
+</details>
+
+<details>
+  <summary>Can you find some special initial conditions with unique behavior?</summary> 
+	<p>The trivial case is (<i>x</i>, <i>x'</i>) = (0, 0). This passes through the magnetic center of both quads. If you are clever, you can also find initial conditons to make the particle pass through the magnetic center of the defocusing quad (<i>1</i>, <i>0.025</i>), or where the focusing quad cancels the initial divergence(<i>1</i>, <i>0.125</i>). 
+	</p>
+</details>
+
+<h3 style='margin: 20px;'>Exercise 2: Fixed Initial Conditions</h3>
+<p>In this exercise, you are provided with fixed initial conditions but are given control over all the lattice parameters. The goal is to get a feel for how different lattices affect the same particle. Try adjusting each parameter separately to see how they affect the particle dynamics.
+</p>
+
+<details>
+  <summary>What happens to the particle orbit as the focal length becomes much longer than the drift length?</summary> 
+	<p>You should see a sinusoidal oscillation taking form, you may need to increase the number of cells to see the full oscillation. This is characteristic of an under-focused lattice. Note that the element-to-element motion is still piece-wise linear. 
+</p>
+</details>
+
+<details>
+  <summary>What happens to the particle orbit if the focal length becomes too short? Be mindful of the scale on your axes, note that you can use decimal focal lengths.</summary> 
+	<p>Over-focused lattices cause unstable orbits - the position and divergence errors grow exponentially.
+</p>
+</details>
+
+<details>
+  <summary>Can you find the boundary between stable and unstable orbits?</summary> 
+  <p>The boundary occurs when the focal length is half of the drift length. At this point, the errors grow linearly. Compare the behavior for lattices that are just barely above and below this threshold.
+</p>
+</details>
+
+<details>
+  <summary>How would the lattice change if you could make the focal length negative?</summary> 
+<p>Using a negative focal length exchanges the focusing and defocusing quadrupoles: FODO -> DOFO. Try it!
+</p>
+</details>
+
+
+
+<h3>Exercise 3: Cell-to-Cell Behavior</h3>
+<p>The only functional change for this exercise is that the animations add markers to every point that corresponds to the entrance of every focusing quad in the lattice. This is done to highlight the cell-to-cell behavior of the particle. Again, try adjusting each parameter separately to see how they affect the cell-to-cell behavior.
+</p>
+
+<details>
+  <summary>What is the cell-to-cell behavior of the particle's orbit through a FODO lattice?</summary> 
+<p>When only considering the cell-to-cell motion, the orbit plot shows that particle motion is sinusoidal. This is more apparent for under-focused lattices, but you may need to use more cells to see the a complete oscillation.
+
+</p>
+</details>
+
+<details>
+  <summary>What is the cell-to-cell phase space behavior of a particle through a FODO lattice?</summary> 
+<p>Cell-to-cell, the particle traces out points on an ellipse.
+</p>
+</details>
+
+<details>
+  <summary>Does the cell-to-cell behavior depend on the lattice?</summary> 
+<p>Yes, changing the lattices will cause the particle to trace out points of different ellipses.
+</p>
+</details>
+
+<p><br>
+For stable lattices, the cell-to-cell motion of a particle is sinusoidal. One full oscillation corresponds to tracing one full ellipse in phase space, or equivolently, one full wavelength on the orbit plot. This is called a <i>betatron oscillation</i>. Each cell of the lattice advances the phase of the betatron oscillation, but the amount that each cell contributes depends on the lattice parameters. To quantify this, let's define the <i>phase advance</i> of a lattice as the amount of phase, in degrees, that each cell contributes to the betatron oscillation. 
+</p>
+
+<details>
+  <summary>What is the phase advance of a lattice whose drift length is equal to its focal length?</summary> 
+<p>It takes exactly 6 cells for a particle to return to it's initial conditions, so the phase advance is 60&deg. 
+</p>
+</details>
+
+<details>
+  <summary>Roughly speaking, what is the phase advance of a lattice with a drift length of 10 and a focal length of 16?</summary> 
+<p>After 10 cells, the particle almost returns to its initial conditions, meaning the amount of phase advanced per cell is roughly 36&deg. Because the particle slightly overshoots, we can say that the phase advance must be slightly greater. 
+</p>
+</details>
+
+<details>
+  <summary>What happens to the phase advance as the focal length increases relative to the drift length?</summary>
+<p>With a longer focal length, the particle needs more cells to complete a full oscillation so the phase advance decreased.
+</p>
+</details>
+
+
+
+
+
+<h3>Exercise 4: Importance of Initial Conditions</h3>
+<p>For this exercise, the animation will continue to highlight the cell-to-cell behavior. This time, the lattice is fixed but you have control over the particle's initial conditions. You are also given a slider to choose where the cell-to-cell behavior is defined from. Start by running the animation for several particles with different initial conditions.
+</p>
+
+<details>
+  <summary>How do the initial conditions affect the phase space ellipse?</summary>
+<p>Different initial conditions will trace out ellipses of different sizes. It's important to recognize that the shape and orientation of the ellipse are unaffected; these properties are uniquely determined by the lattice. The initial conditions also determine the initial phase of the particle's cell-to-cell oscillation.
+</p>
+</details>
+
+<details>
+  <summary>Adjust the slider such that the cell-to-cell behavior is now define from the center of the defocusing quad. How does this affect the phase space ellipse?</summary>
+<p>Watch as you step the slider over until you reach the center of the defocusing quad. You should see a continuous transformation of the phase space ellipse; this hints that the transfer matrices can also describe the transformation of the phase space ellipse. Note that the area of the ellipse is conserved during the transformation.
+</p>
+</details>
+
+<details>
+  <summary>How would you describe the transformation of the phase space ellipse across a drift space?</summary>
+<p>Drift spaces <i>shear</i> the phase space ellipse horizontally. To see this, step the slider from the start to end of one of the drift spaces. 
+</p>
+</details>
+
+
+
+
+<h3>Continued Exploration</h3>
+<p>The unlabeled tab button will configure a sandbox version of this GUI with unrestricted access to every parameter, including a <i>continue</i> button which will let you use the output of your previous run as initial conditions for the subsequent animation. This allows you to easily explore the dynamics of a particle passing through several different lattices.
+</p>
+
+<p >To start, run the animation using the default particle and lattice inputs, then double the focal length and continue the run. You should see that the particle started tracing out a different phase space ellipse - changing the lattice changes the phase space ellipse. You should also see that the new lattice but did not have enough cells for the particle to complete one oscillation - changing the lattice changes the phase advance. Now, return to the original lattice and continue the run again. The particle goes back to tracing out the original phase space ellipse but the size has increased - the ellipse's size depends on the initial conditions of the particle. Can you get the particle back onto the orginal ellipse?
+</p>
+
+
+
+<div id="phase_space_container" style="width: 100%; height: 200px;">
+  <canvas id="space_space_canvas" style="width: 100%; height: 100%; display: block;"></canvas>
+  <script>phase_space_animation('space_space_canvas',"phase_space_container")</script>
+</div>
+
+
+
+
+<p style="padding-bottom: 10px;"></p>
+
+
+</body>
+</html>

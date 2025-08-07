@@ -34,11 +34,11 @@ class CellDiagram(tk.Canvas):
 		x_offset = width/6
 		y_offset = height/20
 		#draw the focusing quad
-		self.f_quad = self.create_oval(2 +width/20, 4, width/4 + 2 - width/20, height-2, fill='#526D82', width=0)
+		self.fquad = self.create_oval(2 +width/20, 4, width/4 + 2 - width/20, height-2, fill='#526D82', width=0)
 		self.create_rectangle(2, 2, width/4 + 2, height-1, outline='#050505')
 
 		#draw the defocusing quad
-		self.d_quad = self.create_rectangle(2 + width/2, 4, 3*width/4, height-2, fill='#526D82', width=0)
+		self.dquad = self.create_rectangle(2 + width/2, 4, 3*width/4, height-2, fill='#526D82', width=0)
 		self.bg1 = self.create_oval(2 + width/2 - x_offset, -y_offset/2, 3*width/4 - x_offset+1, height + y_offset/2 + 2, fill='white', width=0)
 		self.bg2 = self.create_oval(2 + width/2 + x_offset, -y_offset/2, 3*width/4 + x_offset+1, height + y_offset/2 + 2, fill='white', width=0)
 		self.create_rectangle(2 + width/2, 2, 3*width/4 + 2, height-1, outline='#050505')
@@ -48,3 +48,4 @@ class CellDiagram(tk.Canvas):
 		if 'bg' in kwargs or 'background' in kwargs:
 			self.itemconfigure(self.bg1, fill = kwargs.get('bg', kwargs.get('background')))
 			self.itemconfigure(self.bg2, fill = kwargs.get('bg', kwargs.get('background')))
+
