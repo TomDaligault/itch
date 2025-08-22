@@ -183,6 +183,7 @@ class TransversePlotsWidget(tk.Frame):
 		self.previous_lines = []
 
 		self._set_default_plot_limits()
+		self.canvas.draw()
 
 	def _set_default_plot_limits(self):
 		self.orbit_plot.set(xlim=(-0.1, 0.1), ylim=(-0.1, 0.1))
