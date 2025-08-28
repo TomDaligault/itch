@@ -85,13 +85,10 @@ class TransversePlotsWidget(tk.Frame):
 		#check if data will exceed current plot limits, adjust plot limits if necessary
 		if current_smin > smin:
 			self.orbit_plot.set_xlim(xmin = smin)
-
 		if current_smax < smax:
 			self.orbit_plot.set_xlim(xmax = smax)
-
 		if current_xmin > xmin:
 			self.orbit_plot.set_ylim(ymin = xmin*1.1)
-
 		if current_xmax < xmax:
 			self.orbit_plot.set_ylim(ymax = xmax*1.1)
 
@@ -101,13 +98,10 @@ class TransversePlotsWidget(tk.Frame):
 		#check if data will exceed current plot limits, adjust plot limits if necessary
 		if current_xmin > xmin:
 			self.phase_space_plot.set_xlim(xmin = xmin*1.2)
-
 		if current_xmax < xmax:
 			self.phase_space_plot.set_xlim(xmax = xmax*1.2)
-
 		if current_xpmin > xpmin:
 			self.phase_space_plot.set_ylim(ymin = xpmin*1.2)
-
 		if current_xpmax < xpmax:
 			self.phase_space_plot.set_ylim(ymax = xpmax*1.2)
 
@@ -151,6 +145,7 @@ class TransversePlotsWidget(tk.Frame):
 		line = self.clone_line(self.phase_space_line)
 		self.phase_space_plot.add_line(line)
 		self.previous_lines.append(line)
+
 		self.canvas.draw()
 		self._reset_animated_lines()
 

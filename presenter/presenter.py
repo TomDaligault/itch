@@ -43,7 +43,6 @@ class Presenter:
 
 	def _run_animation(self, continue_run=False):
 		self.view.disable_animation_controls()
-
 		if not continue_run:
 			self.update_particle()
 		else:
