@@ -1,5 +1,5 @@
 import tkinter as tk
-from .base_frame import BaseFrame
+from ..custom_widgets.base_frame import BaseFrame
 from view.custom_widgets import StateAwareScale
 
 #CellElementSelector contains a tkinter canvas with a crude FODO cell diagram and an overlaid StateAwareScale
@@ -7,10 +7,17 @@ from view.custom_widgets import StateAwareScale
 class CellElementSelector(BaseFrame):
 	def __init__(self, parent, **kwargs):
 		super().__init__(parent, **kwargs)
-		self.cell_diagram = CellDiagram(self)
+		self.register_callback_name('on_cell_scale_change')
+
+		self._configure_registry = {"background": self.set_background_color,
+            						"bg": self.set_background_color,
+            						"foreground": self.set_foreground_color,
+            						"fg": self.set_foreground_color}
+
 		#By default, tkinter scales pass their current value as an argument to their command.
 		#Rather than deal with the built in, this lambda function throws away the argument.
 		#Callback functions should call scale.get() if they need the current value.
+		self.cell_diagram = CellDiagram(self)
 		self.cell_scale = StateAwareScale(self, command=lambda _: self._execute_callback('on_cell_scale_change'))
 
 		self.cell_diagram.grid(row = 0, column = 0)
@@ -24,6 +31,13 @@ class CellElementSelector(BaseFrame):
 
 	def set_scale_length(self, scale_length):
 		self.cell_scale.configure(to=scale_length)
+
+	def set_foreground_color(self, color):
+		self.cell_diagram.set_foreground_color(color)
+
+	def set_background_color(self, color):
+		self.cell_diagram.set_background_color(color)
+		tk.Frame.configure(self, bg=color) #
 
 #CellDiagram is a canvas object using rectangles and ovals to make a rough FODO cell diagram
 class CellDiagram(tk.Canvas):
@@ -43,9 +57,10 @@ class CellDiagram(tk.Canvas):
 		self.bg2 = self.create_oval(2 + width/2 + x_offset, -y_offset/2, 3*width/4 + x_offset+1, height + y_offset/2 + 2, fill='white', width=0)
 		self.create_rectangle(2 + width/2, 2, 3*width/4 + 2, height-1, outline='#050505')
 
-	def configure(self, **kwargs):
-		super().configure(**kwargs)
-		if 'bg' in kwargs or 'background' in kwargs:
-			self.itemconfigure(self.bg1, fill = kwargs.get('bg', kwargs.get('background')))
-			self.itemconfigure(self.bg2, fill = kwargs.get('bg', kwargs.get('background')))
+	def set_background_color(self, color):
+		self.itemconfigure(self.bg2, fill=color)
+		self.itemconfigure(self.bg1, fill=color)
 
+	def set_foreground_color(self, color):
+		self.itemconfigure(self.fquad, fill=color)
+		self.itemconfigure(self.dquad, fill=color)

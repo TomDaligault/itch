@@ -1,5 +1,5 @@
 import tkinter as tk
-from .base_frame import BaseFrame
+from ..custom_widgets.base_frame import BaseFrame
 from view.custom_widgets import DigitEntry, FloatEntry
 
 class LatticeControls(BaseFrame):

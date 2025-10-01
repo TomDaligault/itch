@@ -1,11 +1,12 @@
 import tkinter as tk
-from .base_frame import BaseFrame
+from ..custom_widgets.base_frame import BaseFrame
 from view.custom_widgets import DigitEntry, FloatEntry
 
 class ParticleControls(BaseFrame):
 	def __init__(self, parent, **kwargs):
 		super().__init__(parent, **kwargs)
 		default_particle_parameters = {'x': 0.4, 'xp': -0.1}
+		self.register_callback_name('randomize_particle')
 
 		self.x_entry = FloatEntry(self)
 		self.xp_entry = FloatEntry(self)
